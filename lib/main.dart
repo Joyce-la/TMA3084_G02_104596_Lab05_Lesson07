@@ -44,6 +44,7 @@ class _CarTableScreenState extends State<CarTableScreen> {
 
   int? _sortColumnIndex;
   bool _sortAscending = true;
+  String _searchQuery = '';
 
   void _sort(int columnIndex, int Function(Car a, Car b) compare) {
     setState(() {
@@ -64,43 +65,79 @@ class _CarTableScreenState extends State<CarTableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final query = _searchQuery.trim().toLowerCase();
+    final filteredCars = _cars.where((car) {
+      return car.make.toLowerCase().contains(query) ||
+          car.model.toLowerCase().contains(query);
+    }).toList();
+
     return Scaffold(
       appBar: AppBar(title: const Text('Car Information'), centerTitle: true),
-      body: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          sortColumnIndex: _sortColumnIndex,
-          sortAscending: _sortAscending,
-          columns: [
-            DataColumn(
-              label: const Text('Car Make'),
-              onSort: (columnIndex, ascending) {
-                _sort(columnIndex, (a, b) => a.make.compareTo(b.make));
-              },
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Search by car make or model',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
             ),
-            DataColumn(
-              label: const Text('Model'),
-              onSort: (columnIndex, ascending) {
-                _sort(columnIndex, (a, b) => a.model.compareTo(b.model));
-              },
-            ),
-            DataColumn(
-              label: const Text('Price (RM)'),
-              numeric: true,
-              onSort: (columnIndex, ascending) {
-                _sort(columnIndex, (a, b) => a.price.compareTo(b.price));
-              },
+            const SizedBox(height: 16),
+            Expanded(
+              child: filteredCars.isEmpty
+                  ? const Center(child: Text('No cars match your search.'))
+                  : SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        sortColumnIndex: _sortColumnIndex,
+                        sortAscending: _sortAscending,
+                        columns: [
+                          DataColumn(
+                            label: const Text('Car Make'),
+                            onSort: (columnIndex, ascending) {
+                              _sort(
+                                columnIndex,
+                                (a, b) => a.make.compareTo(b.make),
+                              );
+                            },
+                          ),
+                          DataColumn(
+                            label: const Text('Model'),
+                            onSort: (columnIndex, ascending) {
+                              _sort(
+                                columnIndex,
+                                (a, b) => a.model.compareTo(b.model),
+                              );
+                            },
+                          ),
+                          DataColumn(
+                            label: const Text('Price (RM)'),
+                            numeric: true,
+                            onSort: (columnIndex, ascending) {
+                              _sort(
+                                columnIndex,
+                                (a, b) => a.price.compareTo(b.price),
+                              );
+                            },
+                          ),
+                        ],
+                        rows: filteredCars.map((car) {
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(car.make)),
+                              DataCell(Text(car.model)),
+                              DataCell(Text(car.price.toStringAsFixed(2))),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
             ),
           ],
-          rows: _cars.map((car) {
-            return DataRow(
-              cells: [
-                DataCell(Text(car.make)),
-                DataCell(Text(car.model)),
-                DataCell(Text(car.price.toStringAsFixed(2))),
-              ],
-            );
-          }).toList(),
         ),
       ),
     );
