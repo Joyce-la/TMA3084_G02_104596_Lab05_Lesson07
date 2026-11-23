@@ -17,7 +17,7 @@ class BottomNavLab extends StatefulWidget {
 }
 
 class _BottomNavLabState extends State<BottomNavLab> {
-  int _currentIndex = 0;
+  int currentIndex = 0;
 
   final List<Widget> screens = const [
     Screen1(),
