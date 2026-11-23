@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 
 import 'screen1.dart';
 import 'screen2.dart';
@@ -6,20 +7,42 @@ import 'screen3.dart';
 import 'screen4.dart';
 
 void main() {
-  runApp(const BottomNavLab());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => TabModel(),
+      child: const BottomNavLab(),
+    ),
+  );
 }
 
-class BottomNavLab extends StatefulWidget {
+class TabModel extends ChangeNotifier {
+  int _currentIndex = 0;
+
+  int get currentIndex => _currentIndex;
+
+  void selectTab(int index) {
+    _currentIndex = index;
+    notifyListeners();
+  }
+}
+
+class BottomNavLab extends StatelessWidget {
   const BottomNavLab({super.key});
 
   @override
-  State<BottomNavLab> createState() => _BottomNavLabState();
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: BottomNavContent(),
+    );
+  }
 }
 
-class _BottomNavLabState extends State<BottomNavLab> {
-  int currentIndex = 0;
+// Separate widget to listen for tab changes
+class BottomNavContent extends StatelessWidget {
+  const BottomNavContent({super.key});
 
-  final List<Widget> screens = const [
+  static const List<Widget> screens = [
     Screen1(),
     Screen2(),
     Screen3(),
@@ -28,36 +51,42 @@ class _BottomNavLabState extends State<BottomNavLab> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Bottom Navigation Bar'),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-        ),
-        body: screens[currentIndex],
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          fixedColor: Colors.white,
-          backgroundColor: Colors.blue,
-          iconSize: 30,
-          currentIndex: currentIndex,
-          onTap: (int index) {
-            setState(() {
-              currentIndex = index;
-            });
-          },
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.alarm), label: 'Alarm'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.business),
-              label: 'Business',
-            ),
-            BottomNavigationBarItem(icon: Icon(Icons.school), label: 'School'),
-          ],
-        ),
+    final currentIndex = context.watch<TabModel>().currentIndex;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bottom Navigation Bar'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+      body: screens[currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        fixedColor: Colors.white,
+        backgroundColor: Colors.blue,
+        iconSize: 30,
+        currentIndex: currentIndex,
+        onTap: (int index) {
+          context.read<TabModel>().selectTab(index);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.alarm),
+            label: 'Alarm',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.business),
+            label: 'Business',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school),
+            label: 'School',
+          ),
+        ],
       ),
     );
   }
